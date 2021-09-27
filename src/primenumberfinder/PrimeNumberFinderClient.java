@@ -7,74 +7,125 @@ package primenumberfinder;
 
 import java.net.*;
 import java.io.*;
-import java.util.*;
 
 public class PrimeNumberFinderClient {
+    
+    //Initialize variables
+
+    static Socket socket = null;
+
+    static DataInputStream in = null;
+
+    static DataOutputStream out = null;
 
     public static void main (String args[]) {
 
-        //Initialize Socket variable
-
-        Socket s = null;
+        //Alert the server that the client is online
         
-        //Initialize Scanner object
+        connectToServer();
         
-        Scanner input = new Scanner(System.in);
-        
-        //Repeatedly send messages to the server
+        //Continuously receive and check numbers from the server
         
         while (true) {
 
-            try {
+            checkNumber();
 
-                int serverPort = 7896;
+        }
+        
+    }
 
-                s = new Socket("localhost", serverPort); 
+    private static void checkNumber() {
+        
+        try {
 
-                DataInputStream in = new DataInputStream( s.getInputStream());
+            //Receive number from the server
 
-                DataOutputStream out = new DataOutputStream( s.getOutputStream());
+            long number = Long.parseLong(in.readUTF().replaceAll("[\\D]", ""));
+
+            //Check if the number is prime
+            
+            String output = String.valueOf(number) + isPrime(number);
+
+            //Send our answer back to the server
+
+            out.writeUTF(output);
+
+        }  catch (IOException e) {
+
+            System.out.println("IO:" + e.getMessage());
+
+        }
+
+    }
+    
+    private static boolean isPrime(long n) {
+
+        if (n <= 1) {
+            
+            return false;
+            
+        }
+
+        for (int i = 2; i < n; i++) {
+            
+            if (n % i == 0) {
                 
-                //Get input message
+                return false;
                 
-                System.out.print("Message to send: ");
-                
-                String message = input.nextLine();
+            }
+        
+        }
+  
+        return true;
+        
+    }
+    
+    private static void connectToServer() {
+        
+        try {
+            
+            //Connect to the server
+            
+            int serverPort = 7896;
 
-                out.writeUTF(message); // UTF is a string encoding; see Sec 4.3
+            socket = new Socket("localhost", serverPort);
+            
+            //Assign input and output stream variables
+            
+            in = new DataInputStream(socket.getInputStream());
+            
+            out = new DataOutputStream(socket.getOutputStream());
+            
+            //Send an alert message to the server
+            
+            out.writeUTF("Alert: new client online");
+            
+        } catch (UnknownHostException e){
 
-                String data = in.readUTF(); 
+            System.out.println("Sock:" + e.getMessage()); 
 
-                System.out.println("Received: "+ data);
+        } catch (EOFException e){
 
-            } catch (UnknownHostException e){
+            System.out.println("EOF:" + e.getMessage());
 
-                System.out.println("Sock:"+e.getMessage()); 
+        } catch (IOException e){
 
-            } catch (EOFException e){
+            System.out.println("IO:" + e.getMessage());
 
-                System.out.println("EOF:"+e.getMessage());
+        } finally {
+
+            if(socket != null) try {
+
+                socket.close();
 
             } catch (IOException e){
 
-                System.out.println("IO:"+e.getMessage());
-
-            } finally {
-
-                if(s != null) try {
-
-                    s.close();
-
-                } catch (IOException e){
-
-                    /*close failed*/
-
-                }
+                /*close failed*/
 
             }
 
         }
-
+        
     }
 
 }
