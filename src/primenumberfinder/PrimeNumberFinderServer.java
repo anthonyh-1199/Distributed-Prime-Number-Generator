@@ -14,7 +14,7 @@ public class PrimeNumberFinderServer {
         
         //Create variable to track for dropped packets
         
-        int messages_index = 1;
+        long messages_index = 1;
         
         //Create a datagram socket 
 
@@ -52,6 +52,12 @@ public class PrimeNumberFinderServer {
 
                 //Increment messages index
                 
+                if (messages_index > 2) {
+                    
+                    messages_index++;
+                    
+                }
+                
                 messages_index++;
 
             }
@@ -62,7 +68,7 @@ public class PrimeNumberFinderServer {
 
         } catch (IOException e) {
         
-        System.out.println("IO: " + e.getMessage());
+            System.out.println("IO: " + e.getMessage());
     
         } finally {
             
