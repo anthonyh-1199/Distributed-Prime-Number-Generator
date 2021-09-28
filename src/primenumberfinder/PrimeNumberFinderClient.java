@@ -9,52 +9,80 @@ import java.net.*;
 import java.io.*;
 
 public class PrimeNumberFinderClient {
-    
-    //Initialize variables
 
-    static Socket socket = null;
-
-    static DataInputStream in = null;
-
-    static DataOutputStream out = null;
-
-    public static void main (String args[]) {
-
-        //Alert the server that the client is online
+    public static void main(String args[]){ 
         
-        connectToServer();
-        
-        //Continuously receive and check numbers from the server
-        
-        while (true) {
+        //Create socket object
 
-            checkNumber();
+        DatagramSocket aSocket = null;
 
-        }
-        
-    }
-
-    private static void checkNumber() {
-        
         try {
 
-            //Receive number from the server
+            //Create a new socket
 
-            long number = Long.parseLong(in.readUTF().replaceAll("[\\D]", ""));
+            aSocket = new DatagramSocket(); 
 
-            //Check if the number is prime
+            //Connect to our server
+
+            InetAddress aHost = InetAddress.getByName("localhost");
+
+            int serverPort = 6789; 
+
+            //Send an alert message to the server
             
-            String output = String.valueOf(number) + isPrime(number);
+            byte[] message = "Alert: new client online".getBytes();
 
-            //Send our answer back to the server
+            DatagramPacket request = new DatagramPacket(message, message.length, aHost, serverPort);
 
-            out.writeUTF(output);
+            aSocket.send(request); 
 
-        }  catch (IOException e) {
+            //Retrieve our reply
+            
+            while (true) {
+                
+                //Create buffer
 
-            System.out.println("IO:" + e.getMessage());
+                byte[] buffer = new byte[1000];
+                
+                //Get the reply from the server of the number we need to check
 
-        }
+                DatagramPacket reply = new DatagramPacket(buffer, buffer.length);
+
+                aSocket.receive(reply);
+                
+                //Convert the reply to a long
+                
+                long number = Long.parseLong(new String(reply.getData()).replaceAll("[\\D]", ""));
+                
+                //Check the number
+
+                String output = String.valueOf(number) + isPrime(number);
+                
+                System.out.println(output);
+                
+                //Return out results to the server
+
+                message = output.getBytes();
+
+                request = new DatagramPacket(message, message.length, aHost, serverPort);
+
+                aSocket.send(request); 
+
+            }
+
+        } catch (SocketException e){
+
+            System.out.println("Socket: " + e.getMessage());
+
+        } catch (IOException e){
+
+            System.out.println("IO: " + e.getMessage());
+
+        } finally { 
+
+            if(aSocket != null) aSocket.close();
+
+        } 
 
     }
     
@@ -79,53 +107,5 @@ public class PrimeNumberFinderClient {
         return true;
         
     }
-    
-    private static void connectToServer() {
-        
-        try {
-            
-            //Connect to the server
-            
-            int serverPort = 7896;
-
-            socket = new Socket("localhost", serverPort);
-            
-            //Assign input and output stream variables
-            
-            in = new DataInputStream(socket.getInputStream());
-            
-            out = new DataOutputStream(socket.getOutputStream());
-            
-            //Send an alert message to the server
-            
-            out.writeUTF("Alert: new client online");
-            
-        } catch (UnknownHostException e){
-
-            System.out.println("Sock:" + e.getMessage()); 
-
-        } catch (EOFException e){
-
-            System.out.println("EOF:" + e.getMessage());
-
-        } catch (IOException e){
-
-            System.out.println("IO:" + e.getMessage());
-
-        } finally {
-
-            if(socket != null) try {
-
-                socket.close();
-
-            } catch (IOException e){
-
-                /*close failed*/
-
-            }
-
-        }
-        
-    }
-
+ 
 }
