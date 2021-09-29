@@ -40,9 +40,11 @@ public class PrimeNumberFinderClient {
             
             while (true) {
                 
-                //Create buffer
+                //Create buffer and output variable
 
                 byte[] buffer = new byte[1000];
+                
+                String output;
                 
                 //Get the reply from the server of the number we need to check
 
@@ -54,10 +56,18 @@ public class PrimeNumberFinderClient {
                 
                 long number = Long.parseLong(new String(reply.getData()).replaceAll("[\\D]", ""));
                 
-                //Check the number
-
-                String output = String.valueOf(number) + isPrime(number);
+                //If the number is prime, return it
                 
+                if (isPrime(number)) {
+                    
+                    output = String.valueOf(number);
+                    
+                } else {
+                    
+                    output = "Value is not prime";
+                    
+                }
+
                 System.out.println(output);
                 
                 //Return out results to the server
