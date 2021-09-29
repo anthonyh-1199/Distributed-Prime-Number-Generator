@@ -7,11 +7,16 @@ package primenumberfinder;
 
 import java.net.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public class PrimeNumberFinderServer {
     
+    //Create variable for writing output
+    
+    static Writer writer;
+    
     public static void main(String args[]){ 
-        
+
         //Create variable to track for dropped packets
         
         long messages_index = 1;
@@ -39,12 +44,28 @@ public class PrimeNumberFinderServer {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
 
                 aSocket.receive(request);
+                
+                //Convert the message from the client to a String, eliminating all whitespace
+                
+                String clientMessage = new String(request.getData()).trim();
+                
+                //If the message given by the client is a prime number, add it to our file
 
-                //System.out.println(new String(request.getData()));
+                try {
+                    
+                    Long.parseLong(clientMessage, 10);
+
+                    writeToFile(clientMessage);
+
+                } catch (NumberFormatException e) {
+
+                    //Message was not a number, continue
+
+                }
 
                 //Reply to the client with the number for it to check
                 
-                byte [] message = String.valueOf(messages_index).getBytes();
+                byte[] message = String.valueOf(messages_index).getBytes();
                 
                 DatagramPacket reply = new DatagramPacket(message, message.length, request.getAddress(), request.getPort());
 
@@ -75,7 +96,73 @@ public class PrimeNumberFinderServer {
             if (aSocket != null) aSocket.close();
         
         }
+        
+        //Clean-up for when the program is shutting down
+        
+        Runtime.getRuntime().addShutdownHook(new Thread(){
+            
+            @Override
+            
+            public void run() {
+                
+                System.out.println("Shutting down!");
+                
+            }
+            
+        });
     
+    }
+    
+    private static void openFile() {
+        
+        //Get the file object
+        
+        File outputFile = new File("Prime Numbers.txt");
+        
+        try {
+        
+            //If the file does not exist, create it
+
+            if (!outputFile.exists()) {
+
+                outputFile.createNewFile();
+
+            }
+
+            //Open the file
+
+            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile, true), StandardCharsets.UTF_8)) ;
+
+        } catch (IOException e) {
+                
+                System.out.println("Error creating output file");
+                
+        }
+        
+    }
+    
+    private static void writeToFile(String string) {
+        
+        //Open the file for us to write to
+        
+        openFile();
+        
+        try {
+            
+            //Append the string to the file
+
+            writer.write(string + "\r\n");
+            
+            //Close the file
+            
+            writer.close();
+            
+        } catch (IOException e) {
+            
+            System.out.println("Error writing to file");
+            
+        }
+
     }
     
 }
