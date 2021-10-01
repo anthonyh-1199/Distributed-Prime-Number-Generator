@@ -7,7 +7,6 @@ package primenumberfinder;
 
 import java.net.*;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 
 public class PrimeNumberFinderServer {
     
@@ -19,7 +18,7 @@ public class PrimeNumberFinderServer {
 
         //Create variable to track for dropped packets
         
-        long messages_index = 1;
+        long messages_index = getMostRecentNumber() + 2;
         
         //Create a datagram socket 
 
@@ -96,21 +95,7 @@ public class PrimeNumberFinderServer {
             if (aSocket != null) aSocket.close();
         
         }
-        
-        //Clean-up for when the program is shutting down
-        
-        Runtime.getRuntime().addShutdownHook(new Thread(){
-            
-            @Override
-            
-            public void run() {
-                
-                System.out.println("Shutting down!");
-                
-            }
-            
-        });
-    
+
     }
     
     private static void openFile() {
@@ -131,7 +116,7 @@ public class PrimeNumberFinderServer {
 
             //Open the file
 
-            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile, true), StandardCharsets.UTF_8)) ;
+            writer = new BufferedWriter(new FileWriter(outputFile, true));
 
         } catch (IOException e) {
                 
@@ -165,4 +150,52 @@ public class PrimeNumberFinderServer {
 
     }
     
+    private static long getMostRecentNumber() {
+        
+        openFile();
+        
+        BufferedReader input = null;
+        
+        String lastLine = "-1";
+        
+        try {
+        
+            File outputFile = new File("Prime Numbers.txt");
+
+            input = new BufferedReader(new FileReader(outputFile));
+
+            String currentLine;
+
+            while ((currentLine = input.readLine()) != null) { 
+
+                lastLine = currentLine;
+                
+            }
+
+        } catch (IOException e) {
+
+            e.printStackTrace();
+            
+        } finally {
+
+            try {
+                
+                if (input != null) {
+                    
+                    input.close();
+                    
+                }
+                
+            } catch (IOException ex) {
+                
+                ex.printStackTrace();
+                
+            }
+            
+        }
+        
+        return Long.parseLong(lastLine, 10);
+        
+    }
+
 }
