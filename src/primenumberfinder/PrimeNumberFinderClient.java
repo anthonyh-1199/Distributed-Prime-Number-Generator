@@ -68,7 +68,7 @@ public class PrimeNumberFinderClient {
                     
                 }
 
-                System.out.println(output);
+                //System.out.println(output);
                 
                 //Return out results to the server
 
