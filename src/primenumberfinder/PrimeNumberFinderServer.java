@@ -174,7 +174,7 @@ public class PrimeNumberFinderServer {
 
         } catch (IOException e) {
 
-            e.printStackTrace();
+            System.out.println("Error reading file");
             
         } finally {
 
@@ -186,9 +186,9 @@ public class PrimeNumberFinderServer {
                     
                 }
                 
-            } catch (IOException ex) {
+            } catch (IOException e) {
                 
-                ex.printStackTrace();
+                System.out.println("Error closing input");
                 
             }
             
