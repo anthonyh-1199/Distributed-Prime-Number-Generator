@@ -7,6 +7,7 @@ package primenumberfinder;
 
 import java.net.*;
 import java.io.*;
+import java.util.HashMap;
 
 public class PrimeNumberFinderServer {
     
@@ -18,8 +19,12 @@ public class PrimeNumberFinderServer {
 
         //Create variable to track for dropped packets
         
-        long messages_index = getMostRecentNumber() + 2;
+        long number_index = getMostRecentNumber() + 2;
         
+        //Create a buffer to track the amount of checks on the current number
+        
+        int number_buffer = 0;
+
         //Create a datagram socket 
 
         DatagramSocket aSocket = null;
@@ -45,40 +50,82 @@ public class PrimeNumberFinderServer {
                 aSocket.receive(request);
                 
                 //Convert the message from the client to a String, eliminating all whitespace
-                
+
                 String clientMessage = new String(request.getData()).trim();
-                
-                //If the message given by the client is a prime number, add it to our file
+
+                //Check the contents of the message
 
                 try {
-                    
-                    Long.parseLong(clientMessage, 10);
 
-                    writeToFile(clientMessage);
+                    //First, we extract the number from our message to see if it's relevant
+
+                    long client_number = Long.parseLong(clientMessage.replaceAll("[^0-9]", ""));
+
+                    if (client_number == number_index) {
+
+                        //Next we parse a boolean value from our message
+
+                        boolean client_result = Boolean.parseBoolean(clientMessage.replaceAll("\\d",""));
+
+                        //Then we update the buffer according to the result
+
+                        if (client_result) {
+
+                            number_buffer++;
+
+                        } else {
+
+                            number_buffer--;
+
+                        }
+
+                    }
 
                 } catch (NumberFormatException e) {
 
-                    //Message was not a number, continue
+                    //Message was not formatted correctly, discarded
+
+                    System.out.println("Warning: invalid message received");
+
+                }
+                
+                //Check if our buffer is complete and ready to move to the next value
+
+                if (Math.abs(number_buffer) > 3) {
+
+                    //Check if number was determined to be prime
+
+                    if (number_buffer > 0) {
+
+                        //Write the number to the list of prime numbers
+
+                        writeToFile(clientMessage.replaceAll("[^0-9]", ""));
+
+                    }
+
+                    //Clear out the buffer
+
+                    number_buffer = 0;
+
+                    //Increment our number index
+
+                    if (number_index > 2) {
+
+                        number_index++;
+
+                    }
+
+                    number_index++;
 
                 }
 
                 //Reply to the client with the number for it to check
                 
-                byte[] message = String.valueOf(messages_index).getBytes();
+                byte[] message = String.valueOf(number_index).getBytes();
                 
                 DatagramPacket reply = new DatagramPacket(message, message.length, request.getAddress(), request.getPort());
 
                 aSocket.send(reply);
-
-                //Increment messages index
-                
-                if (messages_index > 2) {
-                    
-                    messages_index++;
-                    
-                }
-                
-                messages_index++;
 
             }
 
